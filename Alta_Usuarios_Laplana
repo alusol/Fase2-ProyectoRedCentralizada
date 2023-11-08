@@ -1,0 +1,39 @@
+$domain="dc=Laplana,dc=mylocal"
+
+	$fileUsersCsv=Read-Host "Introduce el fichero csv de los usuarios:"
+	$ficheroImportado = import-csv -Path $fileUsersCsv -Delimiter €				     
+	foreach($linea in $ficheroImportado)
+	{
+		$passAccount=ConvertTo-SecureString $linea.DNI -AsPlainText -force
+		$Surnames=$linea.FirstName+' '+$linea.LastName
+		$nameLarge=$linea.Name+' '+$linea.FirstName+' '+$linea.LastName
+		$email=$linea.Email
+		[boolean]$Habilitado=$true
+    		If($linea.Enabled -Match 'false') { $Habilitado=$false}
+		#Establecer los días de expiración de la cuenta (Columna del csv ExpirationAccount)
+   		$ExpirationAccount = $linea.ExpirationAccount
+    		$timeExp = (get-date).AddDays($ExpirationAccount)
+	
+		New-ADUser -SamAccountName $linea.Account -UserPrincipalName $linea.Account -Name $linea.Account `
+			-Surname $Surnames -DisplayName $nameLarge -GivenName $linea.Name `
+			-Description "Cuenta de $nameLarge" -EmailAddress $email `
+			-AccountPassword $passAccount -Enabled $Habilitado `
+			-CannotChangePassword $false -ChangePasswordAtLogon $true `
+			-PasswordNotRequired $false -Path $linea.Path -AccountExpirationDate $timeExp `
+   			-LogonWorkstations $linea.computer
+  	 
+                $horassesion = $linea.NetTime -replace(" ","")
+                net user $linea.Account /times:$horassesion 
+		
+                $cnGrpAccount="Cn="+$linea.Group+","+$linea.Path
+		Add-ADGroupMember -Identity $cnGrpAccount -Members $linea.Account
+		
+	}     
+
+
+
+
+if (!(Get-Module -Name ActiveDirectory))
+{
+  Import-Module ActiveDirectory 
+}
