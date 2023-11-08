@@ -1,1 +1,11 @@
+$domain = "dc=Laplana,dc=mylocal"
+$UOs = Read-Host "Introduce el fichero csv de UOs:"
+$fichero = Import-Csv -Path $UOS -Delimiter '€'
+
+foreach ($line in $fichero) {
+    New-ADOrganizationalUnit -Description $line.Description -Name $line.Name `
+        -Path $line.Path -ProtectedFromAccidentalDeletion $true
+}
+
+Write-Host "Se han creado las UOs satisfactoriamente en el dominio $domain"
 
