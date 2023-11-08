@@ -1,1 +1,11 @@
+$domain="dc=Laplana,dc=mylocal"
+$equiposCsv=Read-Host "Introduce el fichero csv de Equipos:"
+$fichero= import-csv -Path $equiposCsv -delimiter "€"
+foreach($linea in $fichero)
+{
+	New-ADComputer -Enabled:$true -Name:$linea.Computer -Path:$linea.Path -SamAccountName:$linea.Computer
+}
+write-Host ""
+write-Host "Se han creado los equipos en el dominio $domain" -Fore green
+write-Host ""
 
